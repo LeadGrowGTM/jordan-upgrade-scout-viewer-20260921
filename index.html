@@ -439,49 +439,64 @@ table.clay-table td { color: var(--text); }
 .exp-card ol { margin: 0; padding-left: 1.3em; color: var(--secondary); font-size: 14px; }
 .exp-card li { margin-bottom: 6px; }
 
-/* Pipeline pending */
-.pending-panel {
-  background: var(--bg-elevated);
-  border: 1px solid var(--hairline);
-  border-radius: 16px;
-  padding: 40px 28px;
-  text-align: center;
-  box-shadow: var(--shadow);
-}
-.pending-panel h2 {
-  margin: 0 0 10px;
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-}
-.pending-panel p {
-  margin: 0 auto;
-  max-width: 420px;
-  color: var(--secondary);
-  font-size: 15px;
-  line-height: 1.5;
-}
-.pending-badge {
-  display: inline-block;
-  margin-bottom: 16px;
-  font-size: 12px;
+/* Pipeline */
+.cov {
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--secondary);
-  background: var(--bg);
-  border: 1px solid var(--hairline);
+  letter-spacing: 0.02em;
   border-radius: 980px;
-  padding: 5px 12px;
+  padding: 3px 9px;
+  border: 1px solid var(--hairline);
 }
-.pending-slot {
-  margin-top: 24px;
-  border: 1.5px dashed var(--hairline);
-  border-radius: 12px;
-  padding: 28px;
-  color: var(--tertiary);
+.cov.partial { color: var(--p1-fg); border-color: var(--p1-bd); background: var(--p1-bg); }
+.cov.no { color: var(--p0-fg); border-color: var(--p0-bd); background: var(--p0-bg); }
+.cov.yes { color: var(--p2-fg); border-color: var(--p2-bd); background: var(--p2-bg); }
+.top5-list { list-style: none; padding: 0; margin: 0; counter-reset: top5; }
+.top5-list li {
+  counter-increment: top5;
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.top5-list li:last-child { border-bottom: none; }
+.top5-list .num {
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.top5-list .tid { font-weight: 600; color: var(--accent); margin-right: 6px; }
+.stage-row {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--hairline);
   font-size: 14px;
 }
+.stage-row:last-child { border-bottom: none; }
+.stage-code { font-weight: 600; font-size: 13px; color: var(--text); font-variant-numeric: tabular-nums; }
+.stage-detail { color: var(--secondary); }
+.up-fit {
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 10px;
+  background: var(--bg);
+}
+.up-fit .head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+.up-fit h4 { margin: 0 0 8px; font-size: 15px; font-weight: 600; }
+.filter-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.filter-row button {
+  appearance: none; border: 1px solid var(--hairline); background: var(--bg-elevated);
+  color: var(--secondary); border-radius: 980px; padding: 6px 12px;
+  font: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
+}
+.filter-row button.on { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
 
 .footer-note {
   margin-top: 40px;
@@ -495,7 +510,7 @@ table.clay-table td { color: var(--text); }
   .controls { grid-template-columns: 1fr; }
   .seg { width: 100%; overflow-x: auto; }
   .seg button { padding: 6px 10px; font-size: 12px; }
-  .detail h2, .clay-hero h2, .pending-panel h2 { font-size: 24px; }
+  .detail h2, .clay-hero h2 { font-size: 24px; }
   table.clay-table { font-size: 12px; display: block; overflow-x: auto; }
 }
 </style>
@@ -552,16 +567,7 @@ table.clay-table td { color: var(--text); }
 
   <div id="view-clay" class="hide"></div>
 
-  <div id="view-pipeline" class="hide">
-    <div class="pending-panel">
-      <div class="pending-badge">Not yet available</div>
-      <h2>Pipeline fit</h2>
-      <p>Pipeline fit review is pending. When <code>PIPELINE-FIT-REVIEW.md</code> lands, this tab will show the structured review without a redesign.</p>
-      <div class="pending-slot" id="pipelineSlot">
-        Placeholder for pipeline fit content
-      </div>
-    </div>
-  </div>
+  <div id="view-pipeline" class="hide"></div>
 
   <div id="detail" class="detail"></div>
 
@@ -570,9 +576,11 @@ table.clay-table td { color: var(--text); }
 
 <script src="./data.js"></script>
 <script src="./clay.js"></script>
+<script src="./pipeline.js"></script>
 <script>
 const DATA = window.SCOUT_DATA;
 const CLAY = window.CLAY_SCOUT;
+const PIPE = window.PIPELINE_SCOUT;
 const $ = (s) => document.querySelector(s);
 let view = 'home';
 const detail = $('#detail');
@@ -616,6 +624,7 @@ function setView(name){
   if(name === 'upgrades') renderUpgrades();
   if(name === 'digests') renderDigests();
   if(name === 'clay') renderClay();
+  if(name === 'pipeline') renderPipeline();
   window.scrollTo(0,0);
 }
 document.querySelectorAll('#navSeg button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
@@ -874,6 +883,173 @@ function renderClay(){
       if(el){ e.preventDefault(); el.scrollIntoView({behavior:'smooth', block:'start'}); }
     });
   });
+}
+
+
+let pipeFilter = 'all';
+function renderPipeline(){
+  const p = PIPE;
+  if(!p){
+    $('#view-pipeline').innerHTML = '<div class="empty">Pipeline scout data missing.</div>';
+    return;
+  }
+  const m = p.meta || {};
+  const top5 = (p.top5||[]).map((t,i) =>
+    `<li><span class="num">${i+1}</span><div><span class="tid">${esc(t.id)}</span><span>${esc(t.title)}</span></div></li>`
+  ).join('');
+  const stages = (p.stages||[]).map(s =>
+    `<div class="stage-row"><div class="stage-code">${esc(s.code)}</div><div class="stage-detail">${esc(s.detail)}</div></div>`
+  ).join('');
+  const agents = (p.agent_surface||[]).map(a =>
+    `<tr><td>${esc(a.layer)}</td><td>${esc(a.path)}</td><td>${esc(a.role)}</td></tr>`
+  ).join('');
+  const gates = (p.gates||[]).map(g =>
+    `<tr><td>${esc(g.concern)}</td><td>${esc(g.exists)}</td><td>${esc(g.paths)}</td></tr>`
+  ).join('');
+  const ship = (p.ship_next||[]).map(s =>
+    `<tr><td>${esc(s.rank)}</td><td><button class="chip" type="button" data-up="${esc(s.id)}">${esc(s.id)}</button></td><td>${esc(s.why)}</td></tr>`
+  ).join('');
+  const conflicts = (p.conflicts||[]).map(c =>
+    `<tr><td>${esc(c.upgrade)}</td><td>${esc(c.existing)}</td><td>${esc(c.handling)}</td></tr>`
+  ).join('');
+  const dnb = (p.do_not_build||[]).map(x => `<li>${esc(x)}</li>`).join('');
+  const slow = (p.slow_steps||[]).map(x => `<li>${esc(x)}</li>`).join('');
+  const method = (p.method||[]).map(x => `<li>${esc(x)}</li>`).join('');
+  const cp = p.client_pack || {};
+
+  function upFitCard(u){
+    const cov = String(u.covered||'').toLowerCase();
+    const title = (upgradeById(u.id)||{}).title || u.id;
+    return `<div class="up-fit" data-cov="${esc(cov)}" data-pri="${esc(u.priority)}" id="pipe-${esc(u.id)}">
+      <div class="head">
+        <span class="pill ${esc(u.priority)}">${esc(u.priority)}</span>
+        <button class="chip" type="button" data-up="${esc(u.id)}">${esc(u.id)}</button>
+        <span class="cov ${esc(cov)}">${esc(u.covered)}</span>
+        <span class="pill">${esc(u.recommend)}</span>
+      </div>
+      <h4>${esc(title)}</h4>
+      <div class="rec-field"><span class="lbl">Where in pipeline</span><div class="val">${esc(u.where)}</div></div>
+      <div class="rec-field"><span class="lbl">Gap</span><div class="val">${esc(u.gap)}</div></div>
+      <div class="rec-field"><span class="lbl">Effort note</span><div class="val">${esc(u.effort)}</div></div>
+    </div>`;
+  }
+
+  const allUps = p.upgrades || [];
+  const upCards = allUps.map(upFitCard).join('');
+
+  $('#view-pipeline').innerHTML = `
+    <div class="clay-hero">
+      <h2>${esc(m.title||'Pipeline fit')}</h2>
+      <p class="clay-note" style="margin-top:6px">${esc(m.subtitle||'')}</p>
+      <div class="clay-meta">
+        <span>${esc(m.task||'')}</span>
+        <span>${esc(m.mode||'')}</span>
+        <span>${esc(m.repo_scanned||'')}</span>
+      </div>
+      <p class="clay-note"><b>P0 coverage:</b> ${esc(m.p0_summary||'')}</p>
+      <p class="clay-note">Authority: ${esc(m.authority||'')}. Inputs: ${esc(m.inputs||'')}.</p>
+    </div>
+
+    <div class="clay-nav">
+      <a href="#pipe-top5">Top 5</a>
+      <a href="#pipe-map">Pipeline map</a>
+      <a href="#pipe-upgrades">All 28</a>
+      <a href="#pipe-ship">Ship next</a>
+      <a href="#pipe-conflicts">Conflicts</a>
+      <a href="#pipe-donot">Do not build</a>
+      <a href="#pipe-slow">Slow steps</a>
+    </div>
+
+    <div class="clay-section" id="pipe-top5">
+      <h3>CLOSE — Top 5 ship-next</h3>
+      <ul class="top5-list">${top5}</ul>
+    </div>
+
+    <div class="clay-section" id="pipe-map">
+      <h3>Current pipeline map</h3>
+      <h4>Stages (code names)</h4>
+      <div>${stages}</div>
+      <p class="clay-note">${esc(cp.stage_note||'')}</p>
+      <h4>Agent / skill surface</h4>
+      <table class="clay-table"><thead><tr><th>Layer</th><th>Path</th><th>Role today</th></tr></thead><tbody>${agents}</tbody></table>
+      <h4>Client pack layout (today)</h4>
+      <p class="clay-note">Tracked example: ${esc(cp.tracked_example||'')}</p>
+      <ul>${(cp.observed||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+      <p class="clay-note"><b>Not found as standard layout:</b> ${esc(cp.not_found||'')}</p>
+      <h4>Enrichment / scoring / send gates</h4>
+      <table class="clay-table"><thead><tr><th>Concern</th><th>What exists</th><th>Paths</th></tr></thead><tbody>${gates}</tbody></table>
+      <h4>Clay handoffs</h4>
+      <p class="clay-note">${esc(p.clay_handoffs_note||'')}</p>
+    </div>
+
+    <div class="clay-section" id="pipe-upgrades">
+      <h3>Per-upgrade fit (all 28)</h3>
+      <div class="filter-row" id="pipeCovFilter">
+        <button type="button" class="on" data-f="all">All</button>
+        <button type="button" data-f="no">No</button>
+        <button type="button" data-f="partial">Partial</button>
+        <button type="button" data-f="P0">P0 only</button>
+        <button type="button" data-f="ship">Ship first slice</button>
+      </div>
+      <div id="pipeUpList">${upCards}</div>
+    </div>
+
+    <div class="clay-section" id="pipe-ship">
+      <h3>Ranked ship-next (≤8)</h3>
+      <table class="clay-table"><thead><tr><th>#</th><th>Id</th><th>Why this, not newsletter excitement</th></tr></thead><tbody>${ship}</tbody></table>
+      <p class="clay-note">${esc(p.ship_next_note||'')}</p>
+    </div>
+
+    <div class="clay-section" id="pipe-conflicts">
+      <h3>Conflicts / duplicates</h3>
+      <table class="clay-table"><thead><tr><th>Upgrade</th><th>Existing feature</th><th>Handling</th></tr></thead><tbody>${conflicts}</tbody></table>
+    </div>
+
+    <div class="clay-section" id="pipe-donot">
+      <h3>What NOT to build</h3>
+      <p class="clay-note" style="margin-top:0">Repo already does these. Do not rebuild.</p>
+      <ul>${dnb}</ul>
+    </div>
+
+    <div class="clay-section" id="pipe-slow">
+      <h3>Slow / non-deterministic steps</h3>
+      <p class="clay-note" style="margin-top:0">Orchestrator-side facts only. Clay Forge owns Clay wall-clock.</p>
+      <ul>${slow}</ul>
+    </div>
+
+    <div class="clay-section" id="pipe-method">
+      <h3>Method / blockers</h3>
+      <ul>${method}</ul>
+    </div>
+  `;
+
+  $('#view-pipeline').querySelectorAll('.clay-nav a').forEach(a => {
+    a.addEventListener('click', e => {
+      const id = a.getAttribute('href')?.slice(1);
+      const el = id && document.getElementById(id);
+      if(el){ e.preventDefault(); el.scrollIntoView({behavior:'smooth', block:'start'}); }
+    });
+  });
+  $('#view-pipeline').querySelectorAll('[data-up]').forEach(b => {
+    b.onclick = () => showUpgrade(b.dataset.up);
+  });
+  const filterBar = $('#pipeCovFilter');
+  if(filterBar){
+    filterBar.querySelectorAll('button').forEach(btn => {
+      btn.onclick = () => {
+        filterBar.querySelectorAll('button').forEach(x => x.classList.remove('on'));
+        btn.classList.add('on');
+        const f = btn.dataset.f;
+        $('#pipeUpList').querySelectorAll('.up-fit').forEach(card => {
+          let show = true;
+          if(f === 'no' || f === 'partial') show = card.dataset.cov === f;
+          else if(f === 'P0') show = card.dataset.pri === 'P0';
+          else if(f === 'ship') show = (card.textContent||'').toLowerCase().includes('ship first slice');
+          card.style.display = show ? '' : 'none';
+        });
+      };
+    });
+  }
 }
 
 ['upSearch','upPri','upTheme'].forEach(id => {
