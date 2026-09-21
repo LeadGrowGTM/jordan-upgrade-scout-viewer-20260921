@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jordan upgrade scout</title>
+<style>
+:root {
+  --bg:#0b0f14; --panel:#121821; --line:#243044; --text:#e7ecf3; --muted:#93a0b4;
+  --accent:#5b8cff; --p0:#ff5c7a; --p1:#ffb020; --p2:#3dd68c; --p3:#7aa2ff; --chip:#1c2636;
+  font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text)}
+a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+.app{max-width:1180px;margin:0 auto;padding:20px 16px 64px}
+.top{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:flex-end;margin-bottom:16px}
+h1{margin:0;font-size:1.35rem;letter-spacing:-.02em}
+.sub{color:var(--muted);font-size:.9rem;margin-top:4px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tab{background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:999px;padding:8px 14px;cursor:pointer;font:inherit}
+.tab.on{border-color:var(--accent);background:#15233a}
+.controls{display:grid;gap:10px;grid-template-columns:1.5fr .7fr .9fr;margin:12px 0 16px}
+.controls.one{grid-template-columns:1fr}
+input,select{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 12px;font:inherit}
+.stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.stat{background:var(--chip);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:.85rem;color:var(--muted)}
+.stat b{color:var(--text)}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;display:flex;flex-direction:column;gap:8px;min-height:160px}
+.card:hover{border-color:#3a4d6b}
+.card h3{margin:0;font-size:1rem;line-height:1.35}
+.meta{display:flex;flex-wrap:wrap;gap:6px}
+.pill{font-size:.68rem;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:3px 8px;border:1px solid var(--line);color:var(--muted)}
+.pill.P0{color:var(--p0);border-color:#5a2433;background:#2a1218}
+.pill.P1{color:var(--p1);border-color:#5a4318;background:#2a2110}
+.pill.P2{color:var(--p2);border-color:#1d4a36;background:#10261c}
+.pill.P3{color:var(--p3);border-color:#2a3d66;background:#121a2c}
+.snip{color:var(--muted);font-size:.86rem;line-height:1.4;flex:1}
+.band{background:linear-gradient(180deg,#1a1218,var(--panel));border:1px solid #4a2a35;border-radius:16px;padding:14px;margin-bottom:18px}
+.band h2{margin:0 0 10px;font-size:1rem;color:#ff8aa0}
+.section{margin:8px 0 10px;font-size:1.05rem}
+.detail{display:none;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+.detail.on{display:block}
+.back{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 10px;cursor:pointer;font:inherit;margin-bottom:12px}
+.detail h2{margin:0 0 8px;font-size:1.25rem}
+.block{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.block h4{margin:0 0 8px;color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.05em}
+.body{line-height:1.55;white-space:pre-wrap}
+.links{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#182131;border:1px solid var(--line);color:var(--text);border-radius:999px;padding:6px 10px;cursor:pointer;font:inherit;font-size:.85rem}
+.chip:hover{border-color:var(--accent)}
+.hide{display:none!important}
+.empty{color:var(--muted);padding:24px;text-align:center}
+@media(max-width:720px){.controls{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div>
+      <h1>Jordan My Tools upgrade scout</h1>
+      <div class="sub" id="metaLine">Loading...</div>
+    </div>
+    <div class="tabs">
+      <button class="tab on" type="button" data-view="home">Home</button>
+      <button class="tab" type="button" data-view="upgrades">Upgrades</button>
+      <button class="tab" type="button" data-view="digests">Digests</button>
+    </div>
+  </div>
+
+  <div id="view-home">
+    <div class="stats" id="homeStats"></div>
+    <div class="band">
+      <h2>P0 stack (start here)</h2>
+      <div class="grid" id="p0Grid"></div>
+    </div>
+    <h3 class="section">Browse by theme</h3>
+    <div class="grid" id="themeGrid"></div>
+  </div>
+
+  <div id="view-upgrades" class="hide">
+    <div class="controls">
+      <input id="upSearch" placeholder="Search upgrades..." />
+      <select id="upPri"><option value="">All priorities</option><option>P0</option><option>P1</option><option>P2</option><option>P3</option></select>
+      <select id="upTheme"><option value="">All themes</option></select>
+    </div>
+    <div class="stats" id="upStats"></div>
+    <div class="grid" id="upGrid"></div>
+  </div>
+
+  <div id="view-digests" class="hide">
+    <div class="controls one">
+      <input id="diSearch" placeholder="Search digests by subject or mechanism..." />
+    </div>
+    <div class="stats" id="diStats"></div>
+    <div class="grid" id="diGrid"></div>
+  </div>
+
+  <div id="detail" class="detail"></div>
+</div>
+<script src="./data.js"></script>
+<script>
+const DATA = window.SCOUT_DATA;
+const $ = (s) => document.querySelector(s);
+let view = 'home';
+const detail = $('#detail');
+
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));}
+function trunc(s,n=170){s=String(s||'').replace(/\s+/g,' ').trim();return s.length>n?s.slice(0,n-1)+'...':s;}
+function digestByN(n){const k=String(n).padStart(2,'0');return DATA.digests.find(d=>d.n===k||d.n===String(n));}
+function upgradeById(id){return DATA.upgrades.find(u=>u.id===id);}
+
+function setView(name){
+  view=name;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.view===name));
+  ['home','upgrades','digests'].forEach(v=>$('#view-'+v).classList.toggle('hide',v!==name));
+  detail.classList.remove('on'); detail.innerHTML='';
+  if(name==='upgrades') renderUpgrades();
+  if(name==='digests') renderDigests();
+}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
+
+function upgradeCard(u){
+  return `<article class="card" data-up="${esc(u.id)}">
+    <div class="meta"><span class="pill ${esc(u.priority)}">${esc(u.priority)}</span><span class="pill">${esc(u.id)}</span></div>
+    <h3>${esc(u.title)}</h3>
+    <div class="snip">${esc(trunc(u.summary))}</div>
+    <div class="snip">${esc(u.theme)}</div>
+  </article>`;
+}
+function digestCard(d){
+  const n=(d.upgrade_ids||[]).length;
+  return `<article class="card" data-digest="${esc(d.n)}">
+    <div class="meta"><span class="pill">#${esc(d.n)}</span><span class="pill">${esc(d.date||'')}</span></div>
+    <h3>${esc(d.subject)}</h3>
+    <div class="snip">${esc(trunc(d.mechanism_short||d.mechanism_md||'',180))}</div>
+    <div class="snip">${n} linked upgrade${n===1?'':'s'}</div>
+  </article>`;
+}
+
+function showUpgrade(id){
+  const u=upgradeById(id); if(!u) return;
+  const emails=(u.supporting_emails||[]).map(n=>{
+    const d=digestByN(n);
+    const label=d?`${d.n} - ${d.subject}`:String(n);
+    return `<button class="chip" type="button" data-digest="${esc(d?d.n:n)}">${esc(label)}</button>`;
+  }).join('')||'<span class="snip">None listed</span>';
+  detail.innerHTML=`
+    <button class="back" type="button" id="backBtn">Back</button>
+    <div class="meta"><span class="pill ${esc(u.priority)}">${esc(u.priority)}</span><span class="pill">${esc(u.id)}</span><span class="pill">${esc(u.theme)}</span></div>
+    <h2>${esc(u.title)}</h2>
+    <div class="block"><h4>Summary</h4><div class="body">${esc(u.summary)}</div></div>
+    <div class="block"><h4>First slice</h4><div class="body">${esc(u.first_slice)}</div></div>
+    <div class="block"><h4>Supporting digests</h4><div class="links">${emails}</div></div>`;
+  detail.classList.add('on');
+  ['home','upgrades','digests'].forEach(v=>$('#view-'+v).classList.add('hide'));
+  $('#backBtn').onclick=()=>{detail.classList.remove('on'); setView(view); window.scrollTo(0,0);};
+  detail.querySelectorAll('[data-digest]').forEach(b=>b.onclick=()=>showDigest(b.dataset.digest));
+  window.scrollTo(0,0);
+}
+function showDigest(n){
+  const d=digestByN(n); if(!d) return;
+  const ups=(d.upgrade_ids||[]).map(id=>{
+    const u=upgradeById(id);
+    return `<button class="chip" type="button" data-up="${esc(id)}">${esc(u?`${u.id} - ${u.title}`:id)}</button>`;
+  }).join('')||'<span class="snip">No upgrade links</span>';
+  detail.innerHTML=`
+    <button class="back" type="button" id="backBtn">Back</button>
+    <div class="meta"><span class="pill">Digest ${esc(d.n)}</span><span class="pill">${esc(d.date||'')}</span></div>
+    <h2>${esc(d.subject)}</h2>
+    <div class="block"><h4>Mechanism</h4><div class="body">${esc(d.mechanism_md||d.mechanism_short||'')}</div></div>
+    <div class="block"><h4>Linked upgrades</h4><div class="links">${ups}</div></div>
+    <div class="block"><h4>Source file</h4><div class="snip">${esc(d.file||'')}</div></div>`;
+  detail.classList.add('on');
+  ['home','upgrades','digests'].forEach(v=>$('#view-'+v).classList.add('hide'));
+  $('#backBtn').onclick=()=>{detail.classList.remove('on'); setView(view); window.scrollTo(0,0);};
+  detail.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>showUpgrade(b.dataset.up));
+  window.scrollTo(0,0);
+}
+
+function renderHome(){
+  const m=DATA.meta||{};
+  const pc=m.priority_counts||{};
+  $('#metaLine').textContent=`${m.upgrade_count||DATA.upgrades.length} upgrades · ${m.digest_count||DATA.digests.length} digests · viewer only`;
+  $('#homeStats').innerHTML=['P0','P1','P2','P3'].map(p=>`<div class="stat"><b>${pc[p]??DATA.upgrades.filter(u=>u.priority===p).length}</b> ${p}</div>`).join('')
+    +`<div class="stat"><b>${DATA.digests.length}</b> digests</div>`;
+  const p0=DATA.upgrades.filter(u=>u.priority==='P0');
+  $('#p0Grid').innerHTML=p0.map(upgradeCard).join('');
+  $('#p0Grid').querySelectorAll('[data-up]').forEach(el=>el.onclick=()=>showUpgrade(el.dataset.up));
+  const themes=[...new Set(DATA.upgrades.map(u=>u.theme))].sort();
+  $('#themeGrid').innerHTML=themes.map(t=>{
+    const count=DATA.upgrades.filter(u=>u.theme===t).length;
+    const p0n=DATA.upgrades.filter(u=>u.theme===t&&u.priority==='P0').length;
+    return `<article class="card" data-theme="${esc(t)}"><h3>${esc(t)}</h3><div class="snip">${count} upgrades${p0n?` · ${p0n} P0`:''}</div></article>`;
+  }).join('');
+  $('#themeGrid').querySelectorAll('[data-theme]').forEach(el=>el.onclick=()=>{setView('upgrades'); $('#upTheme').value=el.dataset.theme; renderUpgrades();});
+  $('#upTheme').innerHTML='<option value="">All themes</option>'+themes.map(t=>`<option>${esc(t)}</option>`).join('');
+}
+function renderUpgrades(){
+  const q=($('#upSearch').value||'').toLowerCase();
+  const pri=$('#upPri').value; const theme=$('#upTheme').value;
+  const list=DATA.upgrades.filter(u=>{
+    if(pri&&u.priority!==pri) return false;
+    if(theme&&u.theme!==theme) return false;
+    if(!q) return true;
+    return [u.id,u.title,u.summary,u.first_slice,u.theme,...(u.supporting_emails||[])].join(' ').toLowerCase().includes(q);
+  });
+  $('#upStats').innerHTML=`<div class="stat"><b>${list.length}</b> shown / ${DATA.upgrades.length}</div>`;
+  $('#upGrid').innerHTML=list.length?list.map(upgradeCard).join(''):'<div class="empty">No upgrades match.</div>';
+  $('#upGrid').querySelectorAll('[data-up]').forEach(el=>el.onclick=()=>showUpgrade(el.dataset.up));
+}
+function renderDigests(){
+  const q=($('#diSearch').value||'').toLowerCase();
+  const list=DATA.digests.filter(d=>{
+    if(!q) return true;
+    return [d.n,d.subject,d.date,d.mechanism_short,d.mechanism_md,...(d.upgrade_ids||[])].join(' ').toLowerCase().includes(q);
+  });
+  $('#diStats').innerHTML=`<div class="stat"><b>${list.length}</b> shown / ${DATA.digests.length}</div>`;
+  $('#diGrid').innerHTML=list.length?list.map(digestCard).join(''):'<div class="empty">No digests match.</div>';
+  $('#diGrid').querySelectorAll('[data-digest]').forEach(el=>el.onclick=()=>showDigest(el.dataset.digest));
+}
+['upSearch','upPri','upTheme'].forEach(id=> $('#'+id).addEventListener('input', renderUpgrades));
+['upPri','upTheme'].forEach(id=> $('#'+id).addEventListener('change', renderUpgrades));
+$('#diSearch').addEventListener('input', renderDigests);
+renderHome();
+</script>
+</body>
+</html>
